@@ -7,8 +7,6 @@ connect();
 app.use(express.json());
 app.use("/api", route);
 
-app.get("/", (req, res, next) => res.end("Hello this is heroku app"));
-
 app.listen(config.get("port") || process.env.PORT, () =>
   console.log(`fb-node listening on port ${config.get("port")}`)
 );
