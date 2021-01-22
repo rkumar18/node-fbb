@@ -4,6 +4,7 @@ const app = express();
 const connect = require("./connection/connect");
 const config = require("config");
 connect();
+app.use(express.json());
 app.use("/api", route);
 
 app.get("/", (req, res, next) => res.end("Hello this is heroku app"));

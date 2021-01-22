@@ -3,19 +3,22 @@ const { Users } = Models;
 const jwt = require("jsonwebtoken");
 const config = require("../config/default.json");
 const userFunc = {};
+const md5 = require("md5");
+
 userFunc.register = async (req, res) => {
   try {
-    const { email } = req.body;
-    const isUserExist = await Users.findOne({ email: email });
+    const Email = req.body.email;
+    const isUserExist = await Users.findOne({ email: Email });
+    console.log(req.body);
     if (!isUserExist) {
       const user = new Users(req.body);
-      password = md5(user.password);
+      const password = md5(user.password);
       user.confirmPassword = password;
       user.password = password;
       await user.save();
       return res.status(200).json({ message: "user added successfully" });
     } else {
-      return res.status(404).json({ message: "user not found" });
+      return res.status(404).json({ message: "Alreay exist" });
     }
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -29,8 +32,8 @@ userFunc.register = async (req, res) => {
 
 userFunc.login = async (req, res) => {
   try {
-    const { email } = req.body;
-    const user = await User.findOne({ email: email });
+    const email = req.body.email;
+    const user = await Users.findOne({ email: email });
     if (!user) throw new Error("Not found !!");
     const enteredPass = md5(req.body.password);
     if (user.password !== enteredPass) throw new Error("Invalid cred. !");
@@ -52,7 +55,7 @@ userFunc.profile = async (req, res) => {
     if (!token) throw Error("no auth token provided");
     const decode = jwt.verify(token, config.secret);
     const user = decode.user;
-    const userProfile = await User.findById(user.id);
+    const userProfile = await Users.findById(user.id);
     res.status(200).json({ message: "user data", userProfile });
   } catch (error) {
     res.status(401).json({ message: error.message });
