@@ -22,5 +22,6 @@ const userModel = new mongoose.Schema({
   },
 });
 
+// userModel.pre('save',()=)
 const user = mongoose.model("user", userModel);
 module.exports = user;
