@@ -43,18 +43,26 @@ module.exports.toggleLike = async (req, res) => {
 
 module.exports.commentToggler = async (req, res) => {
   try {
+    // return console.log("Working ");
     const userId = req.user.id;
     const postId = req.params.id;
+    if (!postId) throw Error("No post id is given: ");
     const foundPost = await Posts.findById(postId);
     if (!foundPost) throw Error("post not found");
-    const comment = foundPost.comment;
-    const isComment = likes.find((item) => item.id == userId);
-    if (isComment) {
-      likes.pop(isComment);
+    const userComment = foundPost.comment;
+    // return console.log(userComment);
+    const foundComment = userComment.find((id) => id == userId);
+
+    if (foundComment) {
+      const idx = userComment.indexOf(foundComment);
+      userComment.splice(idx, 1);
+      await foundPost.save();
+      return res.json({ success: true, message: "like removed !!" });
     }
-    likes.push(isComment);
-    const totalComment = comment.length;
-    res.status(200).json({ message: "Comment", comment });
+    userComment.push(userId);
+    const totaluserComment = userComment.length;
+    await foundPost.save();
+    res.status(200).json({ success: true, totaluserComment });
   } catch (error) {
     res.status(404).json({
       message: error.message,

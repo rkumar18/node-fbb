@@ -9,6 +9,7 @@
   "author": "Rohit",
   "license": "MIT",
   "dependencies": {
+    "@sendgrid/mail": "^7.4.2",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
     "joi": "^17.3.0",
