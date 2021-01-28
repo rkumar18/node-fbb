@@ -57,7 +57,7 @@ module.exports.commentToggler = async (req, res) => {
       const idx = userComment.indexOf(foundComment);
       userComment.splice(idx, 1);
       await foundPost.save();
-      return res.json({ success: true, message: "like removed !!" });
+      return res.json({ success: true, message: "comment removed !!" });
     }
     userComment.push(userId);
     const totaluserComment = userComment.length;

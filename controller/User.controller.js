@@ -62,4 +62,19 @@ userFunc.profile = async (req, res) => {
   }
 };
 
+userFunc.editProfile = async (req, res) => {
+  try {
+    if (req.body.password) throw Error("password not allowed");
+    const token = req.header("authorization");
+    if (!token) throw Error("no auth token provided");
+    const decode = jwt.verify(token, config.secret);
+    const user = decode.user;
+
+    await Users.findOneAndUpdate({ _id: user.id }, req.body);
+    res.status(200).json({ message: "user data" });
+  } catch (error) {
+    res.status(401).json({ message: error.message });
+  }
+};
+
 module.exports = userFunc;
