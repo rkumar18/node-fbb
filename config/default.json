@@ -1,5 +1,8 @@
 {
     "port": 3000,
-    "secret": "mysecret"
+    "secret": "mysecret",
+    "SENDGRID_API_KEY": "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",
+    "fromEmail": "rohitkumar@apptunix.com",
+    "emailSecret": "email123"
     
 }

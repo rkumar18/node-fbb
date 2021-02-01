@@ -1,9 +1,11 @@
 const Models = require("../models");
 const { Users } = Models;
 const jwt = require("jsonwebtoken");
-const config = require("../config/default.json");
+const config = require("config");
 const userFunc = {};
 const md5 = require("md5");
+const sgMail = require("@sendgrid/mail");
+const fromMail = config.get("fromEmail");
 
 userFunc.register = async (req, res) => {
   try {
@@ -74,6 +76,74 @@ userFunc.editProfile = async (req, res) => {
     res.status(200).json({ message: "user data" });
   } catch (error) {
     res.status(401).json({ message: error.message });
+  }
+};
+
+userFunc.sendEmail = async (req, res) => {
+  try {
+    const token = req.header("authorization");
+    if (!token) throw Error("no auth token provided");
+    const decode = jwt.verify(token, config.secret);
+    const user = decode.user;
+    const userData = await Users.findById(user.id);
+
+    sgMail.setApiKey(
+      "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"
+    );
+    const msg = {
+      to: userData.email,
+      from: fromMail,
+      subject: "Confirm Email",
+      html: "",
+    };
+    console.log(userData.email);
+    const payload = {
+      user: { id: user.id },
+    };
+    const emailToken = jwt.sign(payload, config.get("emailSecret"), {
+      expiresIn: "10m",
+    });
+
+    let url = `http://localhost:3000/api/user/confirmEmail/:token`;
+    msg.html = `<p><a href=${url}/${emailToken}><strong>Click here</strong></a> link for confirm email</p>`;
+
+    sgMail.send(msg, (error, result) => {
+      if (error) {
+        console.log(error);
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+        });
+      } else {
+        console.log(result);
+        return res.status(200).json({
+          success: true,
+          message: "confirmation link send on your email",
+          msg,
+        });
+      }
+    });
+  } catch (error) {
+    res.status(401).json({ message: error.message });
+  }
+};
+
+userFunc.confirmEmail = async (req, res) => {
+  try {
+    const token = req.header("authorization");
+    if (!token) throw Error("no auth token provided");
+    const decode = jwt.verify(token, config.secret);
+    const user = decode.user;
+    const link = req.params.token;
+    const linkDecode = jwt.verify(link, config.get(""));
+    const verifiedUser = await user.findOneAndUpdate(
+      { _id: user.id },
+      { isVerified: true }
+    );
+
+    res.status(200).json({ success: true, message: "you are verified user" });
+  } catch (error) {
+    res.status(401).json({ success: false, message: error.message });
   }
 };
 
