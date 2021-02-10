@@ -6,6 +6,7 @@ const userFunc = {};
 const md5 = require("md5");
 const sgMail = require("@sendgrid/mail");
 const fromMail = config.get("fromEmail");
+const AWS = require("aws-sdk");
 
 userFunc.register = async (req, res) => {
   try {

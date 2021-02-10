@@ -7,6 +7,10 @@ const requiredString = {
 };
 const postModel = new mongoose.Schema(
   {
+    uploadPic: {
+      path: requiredString,
+      fileName: requiredString,
+    },
     title: requiredString,
     body: requiredString,
     like: [
