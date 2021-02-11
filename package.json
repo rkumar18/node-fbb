@@ -10,6 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "@sendgrid/mail": "^7.4.2",
+    "@sentry/node": "^6.1.0",
+    "@sentry/tracing": "^6.1.0",
     "aws-sdk": "^2.836.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
@@ -18,7 +20,8 @@
     "jsonwebtoken": "^8.5.1",
     "md5": "^2.3.0",
     "mongoose": "^5.11.13",
-    "multer": "^1.4.2"
+    "multer": "^1.4.2",
+    "redis": "^3.0.2"
   },
   "devDependencies": {
     "config": "^3.3.3",

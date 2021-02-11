@@ -7,6 +7,24 @@ const md5 = require("md5");
 const sgMail = require("@sendgrid/mail");
 const fromMail = config.get("fromEmail");
 const AWS = require("aws-sdk");
+const redis = require("redis");
+const port_redis = 6379;
+const client = redis.createClient(port_redis);
+const setResponse = (username) => {
+  return `<h2>${username} has ${repos} Git repos</h2>`;
+};
+exports.cacheMiddleware = (req, res, next) => {
+  const { username } = req.params;
+  client.get(username, (err, data) => {
+    if (err) throw err;
+    if (data !== null) {
+      return res.send(setResponse(username, data));
+    }
+    next();
+  });
+};
+
+
 
 userFunc.register = async (req, res) => {
   try {
@@ -64,6 +82,19 @@ userFunc.profile = async (req, res) => {
     res.status(401).json({ message: error.message });
   }
 };
+// ​
+// userFunc.github = async (req, res) => {
+//   try {
+//     console.log("Fetching ...");
+//     const { username } = req.params;
+//     const _ = await fetch(`https://api.github.com/users/${username}`);
+//     const data = await _.json();
+//     client.setex(username, 3600, data.public_repos);
+//     res.send(setResponse(username, data.public_repos));
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// };
 
 userFunc.editProfile = async (req, res) => {
   try {
