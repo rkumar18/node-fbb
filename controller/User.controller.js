@@ -9,6 +9,7 @@ const AWS = require("aws-sdk");
 const redis = require("redis");
 const port_redis = 6379;
 const client = redis.createClient(port_redis);
+const fetch = require("node-fetch")
 const setResponse = (username, repos) => {
   return `<h2>${username} has ${repos} Git repos</h2>`;
 };
