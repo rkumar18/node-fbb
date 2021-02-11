@@ -2,7 +2,6 @@ const Models = require("../models");
 const { Users } = Models;
 const jwt = require("jsonwebtoken");
 const config = require("config");
-const userFunc = {};
 const md5 = require("md5");
 const sgMail = require("@sendgrid/mail");
 const fromMail = config.get("fromEmail");
@@ -10,10 +9,10 @@ const AWS = require("aws-sdk");
 const redis = require("redis");
 const port_redis = 6379;
 const client = redis.createClient(port_redis);
-const setResponse = (username) => {
+const setResponse = (username, repos) => {
   return `<h2>${username} has ${repos} Git repos</h2>`;
 };
-exports.cacheMiddleware = (req, res, next) => {
+module.exports.cacheMiddleware = (req, res, next) => {
   const { username } = req.params;
   client.get(username, (err, data) => {
     if (err) throw err;
@@ -26,7 +25,7 @@ exports.cacheMiddleware = (req, res, next) => {
 
 
 
-userFunc.register = async (req, res) => {
+module.exports.register = async (req, res) => {
   try {
     const Email = req.body.email;
     const isUserExist = await Users.findOne({ email: Email });
@@ -46,12 +45,12 @@ userFunc.register = async (req, res) => {
   }
 };
 
-// userFunc.confirmEmail = async (req, res) => {
+// module.exports.confirmEmail = async (req, res) => {
 //   try {
 //   } catch (error) {}
 // };
 
-userFunc.login = async (req, res) => {
+module.exports.login = async (req, res) => {
   try {
     const email = req.body.email;
     const user = await Users.findOne({ email: email });
@@ -70,7 +69,7 @@ userFunc.login = async (req, res) => {
   }
 };
 
-userFunc.profile = async (req, res) => {
+module.exports.profile = async (req, res) => {
   try {
     const token = req.header("authorization");
     if (!token) throw Error("no auth token provided");
@@ -83,20 +82,20 @@ userFunc.profile = async (req, res) => {
   }
 };
 // ​
-// userFunc.github = async (req, res) => {
-//   try {
-//     console.log("Fetching ...");
-//     const { username } = req.params;
-//     const _ = await fetch(`https://api.github.com/users/${username}`);
-//     const data = await _.json();
-//     client.setex(username, 3600, data.public_repos);
-//     res.send(setResponse(username, data.public_repos));
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
+module.exports.github = async (req, res) => {
+  try {
+    console.log("Fetching ...");
+    const { username } = req.params;
+    const _ = await fetch(`https://api.github.com/users/${username}`);
+    const data = await _.json();
+    client.setex(username, 3600, data.public_repos);
+    res.send(setResponse(username, data.public_repos));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
-userFunc.editProfile = async (req, res) => {
+module.exports.editProfile = async (req, res) => {
   try {
     if (req.body.password) throw Error("password not allowed");
     const token = req.header("authorization");
@@ -111,7 +110,7 @@ userFunc.editProfile = async (req, res) => {
   }
 };
 
-userFunc.sendEmail = async (req, res) => {
+module.exports.sendEmail = async (req, res) => {
   try {
     const token = req.header("authorization");
     if (!token) throw Error("no auth token provided");
@@ -160,7 +159,7 @@ userFunc.sendEmail = async (req, res) => {
   }
 };
 
-userFunc.confirmEmail = async (req, res) => {
+module.exports.confirmEmail = async (req, res) => {
   try {
     const token = req.header("authorization");
     if (!token) throw Error("no auth token provided");
@@ -178,5 +177,3 @@ userFunc.confirmEmail = async (req, res) => {
     res.status(401).json({ success: false, message: error.message });
   }
 };
-
-module.exports = userFunc;
