@@ -92,11 +92,11 @@ module.exports.profile = async (req, res) => {
       } catch (error)  {
         const key =  req.header('id')
         console.log(key);
-        client.get(key, async(err, reply) => {
+        client.get(key, async(err, refresh_redis_token) => {
           if(err) throw Error(err.message)
           try {
-            console.log(reply);
-            const decode = jwt.verify(reply, config.get('refreshToken'));
+            console.log(refresh_redis_token);
+            const decode = jwt.verify(refresh_redis_token, config.get('refreshToken'));
             const user = decode.user;
             const _userProfile = await Users.findById(user.id);
             res.status(200).json({ message: "user refresh data", _userProfile });
