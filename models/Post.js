@@ -9,7 +9,7 @@ const postModel = new mongoose.Schema(
   {
     uploadPic: {
       path: requiredString,
-      fileName: requiredString,
+      filename: requiredString,
     },
     title: requiredString,
     body: requiredString,

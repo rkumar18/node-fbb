@@ -1,8 +1,12 @@
 {
-    "port": 3000,
+    "port": 3001,
     "secret": "mysecret",
+    "refreshToken": "myrefreshtoken",
     "SENDGRID_API_KEY": "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",
     "fromEmail": "rohitkumar@apptunix.com",
-    "emailSecret": "email123"
+    "emailSecret": "email123",
+    "ACCESSKEYID": "AKIAJK4PKLFI63QZYLCQ",
+    "SECRETACCESSKEY":"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",
+    "AWS_BUCKET_NAME":"richao"
     
 }

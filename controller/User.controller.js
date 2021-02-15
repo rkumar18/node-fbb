@@ -13,6 +13,9 @@ const fetch = require("node-fetch")
 const setResponse = (username, repos) => {
   return `<h2>${username} has ${repos} Git repos</h2>`;
 };
+
+
+
 module.exports.cacheMiddleware = (req, res, next) => {
   const { username } = req.params;
   client.get(username, (err, data) => {
@@ -62,9 +65,15 @@ module.exports.login = async (req, res) => {
       user: { id: user.id },
     };
     const token = jwt.sign(payload, require("config").get("secret"), {
-      expiresIn: "1d",
+      expiresIn: "1m",
     });
-    res.status(200).json({ message: "login successfully", token });
+    const refreshToken = jwt.sign(payload, require("config").get("refreshToken"), {
+      expiresIn: "5m",
+    });
+    const key = user.id;
+    client.setex(key,300, refreshToken);
+    res.status(200).header('refreshToken', refreshToken).json({ message: "login successfully", token });
+    
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
@@ -74,13 +83,33 @@ module.exports.profile = async (req, res) => {
   try {
     const token = req.header("authorization");
     if (!token) throw Error("no auth token provided");
-    const decode = jwt.verify(token, config.secret);
-    const user = decode.user;
-    const userProfile = await Users.findById(user.id);
-    res.status(200).json({ message: "user data", userProfile });
+    if(token){
+      try {
+        const decode = jwt.verify(token, config.secret);
+        const user = decode.user;
+        const userProfile = await Users.findById(user.id);
+        res.status(200).json({ message: "user data", userProfile });
+      } catch (error)  {
+        const key =  req.header('id')
+        console.log(key);
+        client.get(key, async(err, reply) => {
+          if(err) throw Error(err.message)
+          try {
+            console.log(reply);
+            const decode = jwt.verify(reply, config.get('refreshToken'));
+            const user = decode.user;
+            const _userProfile = await Users.findById(user.id);
+            res.status(200).json({ message: "user refresh data", _userProfile });
+            
+          } catch (error) {
+            res.json(error.message)
+          }
+      });
+      }
+    }
   } catch (error) {
     res.status(401).json({ message: error.message });
-  }
+  } 
 };
 // ​
 module.exports.github = async (req, res) => {
@@ -178,3 +207,20 @@ module.exports.confirmEmail = async (req, res) => {
     res.status(401).json({ success: false, message: error.message });
   }
 };
+
+module.exports.refreshToken = async (req, res) => {
+   try {
+     const {refreshToken} = req.header
+     jwt.verify(refreshToken, require("config").get("refreshToken"), (err,payload )=> {
+      if (err) throw error.message('token malware');
+      const id = payload.id
+    })
+      const newRefreshToken = jwt.sign(id, require("config").get("refreshToken"), {
+      expiresIn: "5m",
+      });
+    
+    res.status(200).json({'refreshToken':newRefreshToken});
+   } catch (error) {
+    res.status(401)
+   }
+}

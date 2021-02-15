@@ -10,5 +10,5 @@ router.get("/repos/:username", userController.cacheMiddleware,userController.git
 router.patch("/editProfile", userController.editProfile);
 router.post("/sendEmail", userController.sendEmail);
 router.post("/confirmEmail/:token", userController.confirmEmail);
-
+router.get("/refreshToken", userController.refreshToken)
 module.exports = router;
