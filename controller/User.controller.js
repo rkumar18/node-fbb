@@ -9,12 +9,87 @@ const AWS = require("aws-sdk");
 const redis = require("redis");
 const port_redis = 6379;
 const client = redis.createClient(port_redis);
-const fetch = require("node-fetch")
+const fetch = require("node-fetch");
 const setResponse = (username, repos) => {
   return `<h2>${username} has ${repos} Git repos</h2>`;
 };
 
+module.exports.profile = async (req, res) => {
+  const token = req.header("authorization");
+  if (!token) throw Error("no auth token provided");
+  try {
+    if (token) {
+      try {
+        const decode = jwt.verify(token, config.secret);
+        const user = decode.user;
+        const userProfile = await Users.findById(user.id);
+        res.status(200).json({ message: "user data", userProfile });
+      } catch (error) {
+        console.log("In Catch !!! ----->>>>", error.message);
+        const key = req.header("id");
+        // const accessToken = await getNewToken(key);
+        getNewToken(key).then((accessToken) => {
+          console.log("Hereeeeee", accessToken);
+          const decode = jwt.verify(accessToken, config.get("secret"));
+          const user = decode.user;
+          Users.findById(user.id, (err, userData) => {
+            if (err) return res.json({ message: err.message });
+            res.status(200).json({ message: "new token ", userData });
+          });
+        });
+      }
+    }
+  } catch (error) {
+    res.status(401).json({ message: error.message });
+  }
+};
 
+const getNewToken = async (userId) => {
+  // try {
+  const promise = new Promise((resolve, reject) => {
+    let token;
+    const key = userId;
+    client.get(key, async (err, refresh_redis_token) => {
+      if (err) throw Error(err.message);
+      if (!refresh_redis_token) return { message: "Login Again !" };
+      const decode = jwt.verify(
+        refresh_redis_token,
+        config.get("refreshToken")
+      );
+      const user = decode.user;
+      await Users.findById(user.id, (err, _userProfile) => {
+        if (err) throw new Error(err.message);
+        if (user.id == _userProfile.id) {
+          client.DEL(key);
+          const payload = {
+            user: { id: user.id },
+          };
+          const newToken = jwt.sign(payload, require("config").get("secret"), {
+            expiresIn: "1m",
+          });
+          const _refreshToken = jwt.sign(
+            payload,
+            require("config").get("refreshToken"),
+            {
+              expiresIn: "5m",
+            }
+          );
+          client.setex(key, 300, _refreshToken);
+          console.log("Im running second", newToken); ///---------------------------new auth token
+          token = newToken;
+          resolve(newToken);
+        }
+      });
+    });
+
+    
+  });
+
+  return promise;
+  // } catch (error) {
+  //   return error.message;
+  // }
+};
 
 module.exports.cacheMiddleware = (req, res, next) => {
   const { username } = req.params;
@@ -26,8 +101,6 @@ module.exports.cacheMiddleware = (req, res, next) => {
     next();
   });
 };
-
-
 
 module.exports.register = async (req, res) => {
   try {
@@ -67,50 +140,24 @@ module.exports.login = async (req, res) => {
     const token = jwt.sign(payload, require("config").get("secret"), {
       expiresIn: "1m",
     });
-    const refreshToken = jwt.sign(payload, require("config").get("refreshToken"), {
-      expiresIn: "5m",
-    });
+    const refreshToken = jwt.sign(
+      payload,
+      require("config").get("refreshToken"),
+      {
+        expiresIn: "5m",
+      }
+    );
     const key = user.id;
-    client.setex(key,300, refreshToken);
-    res.status(200).header('refreshToken', refreshToken).json({ message: "login successfully", token });
-    
+    client.setex(key, 300, refreshToken);
+    res
+      .status(200)
+      .header("refreshToken", refreshToken)
+      .json({ message: "login successfully", token });
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
 };
 
-module.exports.profile = async (req, res) => {
-  try {
-    const token = req.header("authorization");
-    if (!token) throw Error("no auth token provided");
-    if(token){
-      try {
-        const decode = jwt.verify(token, config.secret);
-        const user = decode.user;
-        const userProfile = await Users.findById(user.id);
-        res.status(200).json({ message: "user data", userProfile });
-      } catch (error)  {
-        const key =  req.header('id')
-        console.log(key);
-        client.get(key, async(err, refresh_redis_token) => {
-          if(err) throw Error(err.message)
-          try {
-            console.log(refresh_redis_token);
-            const decode = jwt.verify(refresh_redis_token, config.get('refreshToken'));
-            const user = decode.user;
-            const _userProfile = await Users.findById(user.id);
-            res.status(200).json({ message: "user refresh data", _userProfile });
-            
-          } catch (error) {
-            res.json(error.message)
-          }
-      });
-      }
-    }
-  } catch (error) {
-    res.status(401).json({ message: error.message });
-  } 
-};
 // ​
 module.exports.github = async (req, res) => {
   try {
@@ -209,18 +256,26 @@ module.exports.confirmEmail = async (req, res) => {
 };
 
 module.exports.refreshToken = async (req, res) => {
-   try {
-     const {refreshToken} = req.header
-     jwt.verify(refreshToken, require("config").get("refreshToken"), (err,payload )=> {
-      if (err) throw error.message('token malware');
-      const id = payload.id
-    })
-      const newRefreshToken = jwt.sign(id, require("config").get("refreshToken"), {
-      expiresIn: "5m",
-      });
-    
-    res.status(200).json({'refreshToken':newRefreshToken});
-   } catch (error) {
-    res.status(401)
-   }
-}
+  try {
+    const { refreshToken } = req.header;
+    jwt.verify(
+      refreshToken,
+      require("config").get("refreshToken"),
+      (err, payload) => {
+        if (err) throw error.message("token malware");
+        const id = payload.id;
+      }
+    );
+    const newRefreshToken = jwt.sign(
+      id,
+      require("config").get("refreshToken"),
+      {
+        expiresIn: "5m",
+      }
+    );
+
+    res.status(200).json({ refreshToken: newRefreshToken });
+  } catch (error) {
+    res.status(401);
+  }
+};
