@@ -1,11 +1,34 @@
-const config = require("../config/default.json");
+const config = require("config");
 const jwt = require("jsonwebtoken");
 const Models = require("../models");
 const { Posts } = Models;
+const aws = require("aws-sdk");
+const s3 = new aws.S3();
+const fs = require("fs");
 
 module.exports.addPost = async (req, res) => {
   try {
-    const post = await Posts.create(req.body);
+    aws.config.setPromisesDependency();
+    aws.config.update({
+      accessKeyId: config.get('ACCESSKEYID'),
+      secretAccessKey: config.get('SECRETACCESSKEY')
+    });
+    var params = {
+      ACL: 'public-read',
+      Bucket : config.get('AWS_BUCKET_NAME'),
+      Body: fs.createReadStream(req.file.path),
+      Key: `fb-posts/${req.file.originalname}`
+    };
+    s3.upload(params, (err, data) => {
+      if (err) {
+        console.log('Error occured while trying to upload to S3 bucket', err);
+      }
+      console.log(data);
+    });
+    const {filename,path} = req.file;
+    console.log({filename, path});
+    const _post = new Posts({...req.body,uploadPic:{filename, path} });
+    await post.save();
     return res.status(200).json({ message: "post added successfully" });
   } catch (error) {
     return res.status(500).json({ error: error.message });
