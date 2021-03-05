@@ -25,8 +25,12 @@ module.exports.profile = async (req, res) => {
         const userProfile = await Users.findById(user.id);
         res.status(200).json({ message: "user data", userProfile });
       } catch (error) {
-        console.log("In Catch !!! ----->>>>", error.message);
-        const key = req.header("id");
+        // console.log("In Catch !!! ----->>>>", error.message);
+        const refreshToken = req.header("refreshToken");
+        const decodeUser = jwt.verify(refreshToken, config.get("refreshToken"));
+        const key = decodeUser.id;
+        console.log(key);
+
         // const accessToken = await getNewToken(key);
         getNewToken(key).then((accessToken) => {
           console.log("Hereeeeee", accessToken);
@@ -81,8 +85,6 @@ const getNewToken = async (userId) => {
         }
       });
     });
-
-    
   });
 
   return promise;
@@ -152,7 +154,7 @@ module.exports.login = async (req, res) => {
     res
       .status(200)
       .header("refreshToken", refreshToken)
-      .json({ message: "login successfully", token });
+      .json({ message: "login successfully", data: { token, refreshToken } });
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
