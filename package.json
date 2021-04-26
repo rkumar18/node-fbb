@@ -12,10 +12,13 @@
     "@sendgrid/mail": "^7.4.2",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
+    "h3-js": "^3.7.1",
     "joi": "^17.3.0",
     "jsonwebtoken": "^8.5.1",
+    "latlon-geohash": "^2.0.0",
     "md5": "^2.3.0",
-    "mongoose": "^5.11.13"
+    "mongoose": "^5.11.13",
+    "ngeohash": "^0.6.3"
   },
   "devDependencies": {
     "config": "^3.3.3",
