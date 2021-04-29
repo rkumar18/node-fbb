@@ -1,7 +1,7 @@
 {
     "port": 3001,
-    "secret": "mysecret",
-    "refreshToken": "myrefreshtoken",
+    "secret": "krQM2WwJGsAW2qI+KdWwAW2qI+Kdigoe8iDsBE2m1P",
+    "refreshToken": "krQM2nHY8cHGsAW2qI+KdNXe8iDsBE2m1P",
     "SENDGRID_API_KEY": "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",
     "fromEmail": "rohitkumar@apptunix.com",
     "emailSecret": "email123",
