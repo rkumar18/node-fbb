@@ -48,17 +48,17 @@ app.use("/api", route);
 const h3 = require("h3-js");
 const h3Index = h3.geoToH3(21.4811, 73.6330, 7);
 const h3Index1 = h3.geoToH3(30.9578, 76.7914, 7);
-console.log(h3Index0);
+console.log(h3Index);
 console.log(h3Index1);
-console.log(h3.h3Distance(h3Index0,h3Index1));
+console.log(h3.h3Distance(h3Index,h3Index1));
 const kRing = h3.kRing(h3Index1, 10);
-console.log("ring", kRing);
+// console.log("ring", kRing);
 
 const parent = h3.h3ToParent(h3Index1, 3) ;
-const parent1 = h3.h3ToParent(h3Index0, 3) ;
+const parent1 = h3.h3ToParent(h3Index, 3) ;
 console.log('parent', parent);
 console.log('parent1', parent1);
-console.log(h3.h3ToGeo(h3Index0));
+console.log(h3.h3ToGeo(h3Index));
 app.listen(config.get("port") || process.env.PORT, () =>
   console.log(`fb-node listening on port ${config.get("port")}`)
 );
