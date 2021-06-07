@@ -35,5 +35,10 @@ const postModel = new mongoose.Schema(
   }
 );
 
+
+postModel.statics.findByName = function(name) {
+  return this.find({ title: new RegExp(name, 'i') });
+};
+
 const post = mongoose.model("post", postModel);
 module.exports = post;

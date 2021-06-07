@@ -13,4 +13,5 @@ router.post(
   middlewares.verifyToken,
   postController.commentToggler
 );
+router.get("/", postController.getPost);
 module.exports = router;

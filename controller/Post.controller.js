@@ -92,3 +92,15 @@ module.exports.commentToggler = async (req, res) => {
     });
   }
 };
+
+module.exports.getPost = async(req, res) => {
+  try {
+
+    let post = await Models.Posts.findByName(req.body.name);
+    res.status(200).json({data: post})
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+}
